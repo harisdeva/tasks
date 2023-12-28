@@ -1,0 +1,24 @@
+#!/bin/bash
+
+# List of hosts to traceroute
+hosts=("www.google.com" "8.8.4.4" "142.251.46.174" "2607:f8b0:4005:80c::200e")
+
+# Function to perform traceroute for a given host
+perform_traceroute() {
+    host=$1
+    echo "Traceroute for $host:"
+    if traceroute_result=$(traceroute -q 1 -w 2 -m 15 $host 2>&1); then
+        echo "$traceroute_result"
+        total_time=$(echo "$traceroute_result" | awk '{ sum += $7 } END { print sum }')
+        echo "Total time taken: $total_time ms"
+    else
+        echo "Error: Traceroute failed for $host"
+        echo "Error message: $traceroute_result"
+    fi
+    echo ""
+}
+
+# Iterate through each host and perform traceroute
+for host in "${hosts[@]}"; do
+    perform_traceroute $host
+done

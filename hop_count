@@ -1,0 +1,6 @@
+#!/bin/bash
+#parse traceroute for hops and output to stdout.
+for i in `cat hosts.txt`
+do
+traceroute $i 2>/dev/null | tail -1 | awk '{print $1}'
+done

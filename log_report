@@ -1,0 +1,51 @@
+#!/bin/bash
+
+# List of hosts to check
+hosts=("www.google.com" "8.8.4.4")
+
+# Log file
+log_file="network_audit_log.txt"
+
+# Function to log information for a given host
+log_host_info() {
+    host=$1
+    echo "===================================================" >> "$log_file"
+    echo "Host: $host" >> "$log_file"
+
+    # Check reachability
+    if ping -c 3 $host &> /dev/null; then
+        echo "Status: Reachable" >> "$log_file"
+    else
+        echo "Status: Unreachable" >> "$log_file"
+    fi
+
+    # Open ports
+    echo "Open Ports:" >> "$log_file"
+    nmap_output=$(nmap -p- --open $host | grep ^[0-9] | awk '{print $1}')
+    if [ -z "$nmap_output" ]; then
+        echo "No open ports found." >> "$log_file"
+    else
+        echo "$nmap_output" >> "$log_file"
+    fi
+
+    # Traceroute
+    echo "Traceroute:" >> "$log_file"
+    traceroute_output=$(traceroute -q 1 -w 2 -m 15 $host)
+    echo "$traceroute_output" >> "$log_file"
+
+    # Bandwidth measurement
+    echo "Bandwidth Measurement:" >> "$log_file"
+    speedtest_output=$(speedtest)
+    echo "$speedtest_output" >> "$log_file"
+
+    echo "===================================================" >> "$log_file"
+    echo "" >> "$log_file"
+}
+
+# Iterate through each host and log information
+for host in "${hosts[@]}"; do
+    log_host_info $host
+done
+
+echo "Audit information saved to $log_file"
+
