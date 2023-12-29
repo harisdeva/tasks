@@ -13,3 +13,6 @@
 
 # log_report
 ## It creates a file network_audit_log.txt and contains the required information
+
+# error_handle
+## It continues to next host if one host in unreachable

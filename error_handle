@@ -1,0 +1,69 @@
+#!/bin/bash
+
+# List of hosts to check
+hosts=("8.8.8.1" "google.com")
+
+# Log file
+log_file="network_audit_log.txt"
+
+# Function to handle errors
+handle_error() {
+    echo "Error occurred. Exiting..."
+    exit 1
+}
+
+# Set up error handling
+trap 'handle_error' ERR
+
+# Function to log information for a given host
+log_host_info() {
+    host=$1
+    echo "===================================================" >> "$log_file"
+    echo "Host: $host" >> "$log_file"
+
+    # Check reachability
+    if ping -c 3 $host &> /dev/null; then
+        echo "Status: Reachable" >> "$log_file"
+    else
+        echo "Error: Host is unreachable." >> "$log_file"
+        return 1
+    fi
+
+    # Open ports
+    echo "Open Ports:" >> "$log_file"
+    if nmap_output=$(nmap -p- --open $host 2>/dev/null | grep ^[0-9] | awk '{print $1}'); then
+        if [ -z "$nmap_output" ]; then
+            echo "No open ports found." >> "$log_file"
+        else
+            echo "$nmap_output" >> "$log_file"
+        fi
+    else
+        echo "Error: Failed to retrieve open ports information." >> "$log_file"
+    fi
+
+    # Traceroute
+    echo "Traceroute:" >> "$log_file"
+    if traceroute_output=$(traceroute -q 1 -w 2 -m 15 $host 2>/dev/null); then
+        echo "$traceroute_output" >> "$log_file"
+    else
+        echo "Error: Failed to retrieve traceroute information." >> "$log_file"
+    fi
+
+    # Bandwidth measurement
+    echo "Bandwidth Measurement:" >> "$log_file"
+    if speedtest_output=$(speedtest-cli 2>/dev/null); then
+        echo "$speedtest_output" >> "$log_file"
+    else
+        echo "Error: Failed to retrieve bandwidth information." >> "$log_file"
+    fi
+
+    echo "===================================================" >> "$log_file"
+    echo "" >> "$log_file"
+}
+
+# Iterate through each host and log information
+for host in "${hosts[@]}"; do
+    log_host_info $host || continue
+done
+
+echo "Audit information saved to $log_file"
